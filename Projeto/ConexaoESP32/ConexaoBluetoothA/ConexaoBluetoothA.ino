@@ -95,7 +95,7 @@ void loop() {
 
       masterCharacteristics.setValue("Mensagem de Master");
       masterCharacteristics.notify();
-      Serial.println("Dados Enviados...\n");
+      Serial.println("\nDados Enviados...");
       lastTime = millis();
     }
   }
@@ -105,4 +105,6 @@ void loop() {
     Serial.print("Mensagem Recebida: ");
     Serial.println(slaveValue.c_str());
   }
+
+  delay(50);
 }

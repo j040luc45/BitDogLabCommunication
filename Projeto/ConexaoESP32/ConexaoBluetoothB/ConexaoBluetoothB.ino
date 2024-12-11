@@ -32,9 +32,9 @@ void loop() {
   if (bleFerramentasSlave->getPodeConectar()) {
 
     if (bleFerramentasSlave->conectarSlaveComServer(SERVICE_UUID, CHARACTERISTIC_UUID_RX, CHARACTERISTIC_UUID_TX)) {
-      Serial.println("We are now connected to the BLE Server.");
+      Serial.println("Conectado com o Servidor.");
     } else {
-      Serial.println("We have failed to connect to the server; Restart your device to scan for nearby BLE server again.");
+      Serial.println("Não foi possível se conectar com o servidor, tente reinicia-lo.");
     }
     bleFerramentasSlave->setPodeConectar(false);
 
@@ -43,11 +43,13 @@ void loop() {
   if (bleFerramentasSlave->getNovoValorMaster()){
 
     bleFerramentasSlave->setNovoValorMaster(false);
+    Serial.print("Mensagem Recebida: ");
     Serial.print(bleFerramentasSlave->getValorRecebido());
+    Serial.println("Enviando Dados...\n");
 
     bleFerramentasSlave->enviarMensagemServer("Mensagem do Slave");
 
   }
 
-  delay(1000); // Delay a second between loops.
+  delay(50);
 }

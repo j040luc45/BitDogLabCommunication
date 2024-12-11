@@ -1,0 +1,4 @@
+# Conexão Raspberry Pi Pico w com ESP32A:
+
+C00 - Raspberry Tentando se Conectar ao ESP32A
+C01 - ESP32A responde ao pedido de conexão

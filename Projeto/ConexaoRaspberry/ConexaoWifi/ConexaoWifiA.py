@@ -12,16 +12,6 @@ def web_page():
 # if you do not see the network you may have to power cycle
 # unplug your pico w for 10 seconds and plug it in again
 def ap_mode(ssid, password):
-    """
-        Description: This is a function to activate AP mode
-
-        Parameters:
-
-        ssid[str]: The name of your internet connection
-        password[str]: Password for your internet connection
-
-        Returns: Nada
-    """
     # Just making our internet connection
     ap = network.WLAN(network.AP_IF)
     ap.config(essid=ssid, password=password)

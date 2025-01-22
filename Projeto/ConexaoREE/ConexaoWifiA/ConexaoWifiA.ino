@@ -1,16 +1,32 @@
 #include <HardwareSerial.h>
 
-#define BUFFER_SIZE 50 
+#define BUFFER_SIZE 100 
 #define UART1_RX 18
 #define UART1_TX 17
 
+#define TIMEOUTCONEXAO 2000
+
+//Variáveis da comunicação
 HardwareSerial UART_COM(1);
 char buffer[BUFFER_SIZE];
+long ultimaConexao = 0;
+
+int estadoEsp32A = 0;
+
+//Variáveis da rede
+//1 - wifi
+int tipoRede;
+char * nomeRede;
+char * senhaRede;
+
+void(* resetFunc) (void) = 0;
 
 void setup() 
 {
   Serial.begin(115200);
   UART_COM.begin(115200, SERIAL_8N1, UART1_RX, UART1_TX);
+
+  ClearBuffer();
 }
 
 void loop() 
@@ -23,9 +39,78 @@ void loop()
     }
     buffer[index] = '\0';
 
-    Serial.print("Mensagem Recebida: ");
-    Serial.println(buffer);
+    if (index < 3 || buffer[0] != 'C')
+      return;
     
-    UART_COM.write("Mensagem do Arduino");
+    ultimaConexao = millis();
+    
+    if (strcmp(buffer, "C00") == 0) {
+      UART_COM.write("C01");
+      estadoEsp32A = 1;
+
+      Serial.println("Raspberry Conectada");
+    }
+    else if (estadoEsp32A == 0)
+      return;
+    else if (estadoEsp32A == 1) {
+      Serial.print("Mensagem Recebida: ");
+      Serial.println(buffer);
+
+      if (strcmp(buffer, "C02") == 0)
+        UART_COM.write("C02");
+      else if (strcmp(buffer, "C03") == 0) {
+        UART_COM.write("C03:OK");
+        estadoEsp32A = 2;
+      }
+    }
+    else if (estadoEsp32A >= 2 && estadoEsp32A <= 4) {
+      Serial.print("Mensagem Recebida: ");
+      Serial.println(buffer);
+
+      char dadosRede[BUFFER_SIZE];
+      int i;
+      for (i = 4; buffer[i] != '\0'; i++) {
+        dadosRede[i - 4] = buffer[i];
+      }
+      dadosRede[i - 4] = '\0';
+
+      switch (estadoEsp32A) {
+        case 2: 
+          if (strcmp(dadosRede, "wifi") == 0)
+            tipoRede = 1;
+          break;
+        case 3:
+          nomeRede = strdup(dadosRede);
+          break;
+        case 4:
+          senhaRede = strdup(dadosRede);
+          break;
+      }
+
+      UART_COM.write("C03:OK");
+      estadoEsp32A++;
+    }
+    else if (estadoEsp32A == 5) {
+      Serial.print("Mensagem Recebida: ");
+      Serial.println(buffer);
+
+      Serial.print("Dados da rede\n: Tipo: ");
+      Serial.print(tipoRede);
+      Serial.print("; Nome da Rede: ");
+      Serial.print(nomeRede);
+      Serial.print("; Senha da Rede: ");
+      Serial.println(senhaRede);
+
+      UART_COM.write("C04");
+    }
   }
+
+  if (estadoEsp32A != 0 && millis() - ultimaConexao > TIMEOUTCONEXAO) {
+    resetFunc();
+  }
+}
+
+void ClearBuffer() {
+  while (UART_COM.available())
+    UART_COM.read();
 }

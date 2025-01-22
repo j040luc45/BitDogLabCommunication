@@ -5,3 +5,4 @@ C01 - ESP32A responde ao pedido de conexão
 C02 - Sem informação
 C03 - Envio dos dados da rede a ser criada
 C04 - Aguardando criação da rede
+C05 - Aguardando novo cliente

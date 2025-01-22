@@ -11,13 +11,15 @@ uart.init(bits=8, parity=None, stop=1)
 #4 - Aguardando novos clientes
 estadoRaspberry = 0
 ultimaConexao = time.time()
+tempoMaximoNaoRetorno = 2.0
 
 def recuperarMensagemSerial():
     global uart
     global estadoRaspberry
     global ultimaConexao
+    global tempoMaximoNaoRetorno
 
-    while (not uart.any() and time.time() - ultimaConexao < 2):
+    while (not uart.any() and time.time() - ultimaConexao < tempoMaximoNaoRetorno):
         time.sleep(.2)
 
     if (not uart.any()):
@@ -59,6 +61,7 @@ def enviarDadosDaRede():
     global dadosDaRede
     global indexDadosDaRede
     global tentativaCriacaoRede
+    global tempoMaximoNaoRetorno
 
     uart.write("C03" + dadosDaRede[indexDadosDaRede])
 
@@ -70,6 +73,8 @@ def enviarDadosDaRede():
 
         if (len(dadosDaRede) == indexDadosDaRede):
             estadoRaspberry = 3
+            tempoMaximoNaoRetorno = 10.0
+            print("Dados da Rede Enviado")
 
     elif (data == "error"):
         estadoRaspberry = 0
@@ -103,5 +108,14 @@ while True:
 
         if (data == "error"):
             estadoRaspberry = 0
+
+        if (data == "C04:OK"):
+            tempoMaximoNaoRetorno = 2.0
+            estadoRaspberry = 4
+            print("Rede Criada, Aguardando Clientes...")
+
+    elif (estadoRaspberry == 4):
+        uart.write("C05")
+        data = recuperarMensagemSerial()
 
     time.sleep(.5)

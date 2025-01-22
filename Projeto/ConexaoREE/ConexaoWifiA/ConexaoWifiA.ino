@@ -1,15 +1,16 @@
 #include <HardwareSerial.h>
+#include <WiFi.h>
 
 #define BUFFER_SIZE 100 
 #define UART1_RX 18
 #define UART1_TX 17
 
-#define TIMEOUTCONEXAO 2000
 
 //Variáveis da comunicação
 HardwareSerial UART_COM(1);
 char buffer[BUFFER_SIZE];
 long ultimaConexao = 0;
+int tempoMaximoNaoRetorno = 2000;
 
 int estadoEsp32A = 0;
 
@@ -18,6 +19,10 @@ int estadoEsp32A = 0;
 int tipoRede;
 char * nomeRede;
 char * senhaRede;
+
+//Variáveis da rede wifi
+int estadoWifiA = 0;
+WiFiServer * server;
 
 void(* resetFunc) (void) = 0;
 
@@ -67,6 +72,9 @@ void loop()
       Serial.print("Mensagem Recebida: ");
       Serial.println(buffer);
 
+      if (buffer[0] != 'C' || buffer[1] != '0' || buffer[2] != '3')
+        return;
+
       char dadosRede[BUFFER_SIZE];
       int i;
       for (i = 4; buffer[i] != '\0'; i++) {
@@ -89,23 +97,68 @@ void loop()
 
       UART_COM.write("C03:OK");
       estadoEsp32A++;
+
+      if (estadoEsp32A == 5) {
+
+        Serial.print("\nDados da rede: \nTipo: ");
+        Serial.print(tipoRede);
+        Serial.print("; Nome da Rede: ");
+        Serial.print(nomeRede);
+        Serial.print("; Senha da Rede: ");
+        Serial.println(senhaRede);
+
+        tempoMaximoNaoRetorno = 10000;
+
+        if (tipoRede == 1)
+          estadoWifiA = 1;
+      }
     }
     else if (estadoEsp32A == 5) {
       Serial.print("Mensagem Recebida: ");
       Serial.println(buffer);
 
-      Serial.print("Dados da rede\n: Tipo: ");
-      Serial.print(tipoRede);
-      Serial.print("; Nome da Rede: ");
-      Serial.print(nomeRede);
-      Serial.print("; Senha da Rede: ");
-      Serial.println(senhaRede);
+      if (strcmp(buffer, "C04") == 0)
+        UART_COM.write("C04");
+    }
+    else if (estadoEsp32A == 6) {
+      Serial.print("Mensagem Recebida: ");
+      Serial.println(buffer);
 
-      UART_COM.write("C04");
+      if (strcmp(buffer, "C04") != 0)
+        return;
+
+      UART_COM.write("C04:OK");
+
+      estadoEsp32A = 7;
+      tempoMaximoNaoRetorno = 2000;
+    }
+    else if (estadoEsp32A == 7) {
+      Serial.print("Mensagem Recebida: ");
+      Serial.println(buffer);
+
+      if (strcmp(buffer, "C05") == 0)
+        UART_COM.write("C05");
     }
   }
 
-  if (estadoEsp32A != 0 && millis() - ultimaConexao > TIMEOUTCONEXAO) {
+  if (estadoWifiA == 1) {
+    server = new WiFiServer(80);
+
+    WiFi.softAP(nomeRede, senhaRede);
+    IPAddress IP = WiFi.softAPIP();
+
+    Serial.print("AP IP address: ");
+    Serial.println(IP);
+    
+    server->begin();
+    estadoWifiA = 2;
+    estadoEsp32A = 6;
+  }
+  else if (estadoWifiA == 2) {
+    
+  }
+
+  if (estadoEsp32A != 0 && millis() - ultimaConexao > tempoMaximoNaoRetorno) {
     resetFunc();
   }
 }

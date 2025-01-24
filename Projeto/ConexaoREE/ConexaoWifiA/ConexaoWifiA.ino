@@ -5,12 +5,11 @@
 #define UART1_RX 18
 #define UART1_TX 17
 
-
-//Variáveis da comunicação
+//Variáveis da comunicação serial
 HardwareSerial UART_COM(1);
 char buffer[BUFFER_SIZE];
-long ultimaConexao = 0;
-int tempoMaximoNaoRetorno = 2000;
+long ultimaConexaoSerial = 0;
+int tempoMaximoNaoRetornoSerial = 2000;
 
 int estadoEsp32A = 0;
 
@@ -47,7 +46,7 @@ void loop()
     if (index < 3 || buffer[0] != 'C')
       return;
     
-    ultimaConexao = millis();
+    ultimaConexaoSerial = millis();
     
     if (strcmp(buffer, "C00") == 0) {
       UART_COM.write("C01");
@@ -107,7 +106,7 @@ void loop()
         Serial.print("; Senha da Rede: ");
         Serial.println(senhaRede);
 
-        tempoMaximoNaoRetorno = 10000;
+        tempoMaximoNaoRetornoSerial = 10000;
 
         if (tipoRede == 1)
           estadoWifiA = 1;
@@ -130,12 +129,9 @@ void loop()
       UART_COM.write("C04:OK");
 
       estadoEsp32A = 7;
-      tempoMaximoNaoRetorno = 2000;
+      tempoMaximoNaoRetornoSerial = 2000;
     }
     else if (estadoEsp32A == 7) {
-      Serial.print("Mensagem Recebida: ");
-      Serial.println(buffer);
-
       if (strcmp(buffer, "C05") == 0)
         UART_COM.write("C05");
     }
@@ -155,10 +151,10 @@ void loop()
     estadoEsp32A = 6;
   }
   else if (estadoWifiA == 2) {
-    
+
   }
 
-  if (estadoEsp32A != 0 && millis() - ultimaConexao > tempoMaximoNaoRetorno) {
+  if (estadoEsp32A != 0 && millis() - ultimaConexaoSerial > tempoMaximoNaoRetornoSerial) {
     resetFunc();
   }
 }

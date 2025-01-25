@@ -54,8 +54,9 @@ void loop()
 
       Serial.println("Raspberry Conectada");
     }
-    else if (estadoEsp32A == 0)
+    else if (estadoEsp32A == 0) {
       return;
+    }
     else if (estadoEsp32A == 1) {
       Serial.print("Mensagem Recebida: ");
       Serial.println(buffer);
@@ -83,7 +84,7 @@ void loop()
 
       switch (estadoEsp32A) {
         case 2: 
-          if (strcmp(dadosRede, "wifi") == 0)
+          if (strcmp(dadosRede, "wifi-master") == 0)
             tipoRede = 1;
           break;
         case 3:

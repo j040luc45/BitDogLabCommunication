@@ -1,0 +1,11 @@
+# Conexão Raspberry Pi Pico w com ESP32A:
+
+C00 - Raspberry Tentando se Conectar ao ESP32A
+C01 - ESP32A responde ao pedido de conexão
+C02 - Sem informação
+C03 - Envio dos dados da rede a ser criada // A ser conectada
+C04 - Aguardando criação da rede // Sem uso para slave
+C05 - Aguardando novo cliente // Aguardando conexão
+C06 - Novo cliente conectado // Conexão feita
+C07 - Comunicação Padrão
+C08 - Nova mensagem

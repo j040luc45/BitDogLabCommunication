@@ -91,6 +91,7 @@ def enviarDadosDaRede():
         tentativaCriacaoRede = 0
 
         if (len(dadosDaRede) == indexDadosDaRede):
+            indexDadosDaRede = 0
             return True
 
     elif (data == "timeout"):
@@ -165,5 +166,41 @@ while True:
     elif (estadoRaspberry == 9):
         uart.write("C05")
         data = recuperarMensagemSerial()
+
+        if (data == "timeout"):
+            estadoRaspberry = 0
+        elif (data == "C05:OK"):
+            estadoRaspberry = 10
+    
+    elif (estadoRaspberry == 10):
+        adicionarLinhaOLED("Clt Conectado")
+        estadoRaspberry = 11
+
+    elif (estadoRaspberry == 11):
+        uart.write("C06")
+        data = recuperarMensagemSerial()
+
+        if (data == "timeout"):
+            estadoRaspberry = 0
+        
+        estadoRaspberry = 12
+
+    elif (estadoRaspberry == 12):
+        uart.write("C08:Oxi mainha")
+        data = recuperarMensagemSerial()
+
+        if (data == "timeout"):
+            estadoRaspberry = 0
+        
+        estadoRaspberry = 13
+
+    elif (estadoRaspberry == 13):
+        uart.write("C08:Acho q foi em")
+        data = recuperarMensagemSerial()
+
+        if (data == "timeout"):
+            estadoRaspberry = 0
+        
+        estadoRaspberry = 11
 
     time.sleep(tempoMensagemSerial)

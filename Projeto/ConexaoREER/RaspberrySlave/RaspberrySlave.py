@@ -104,6 +104,7 @@ def enviarDadosDaRede():
     
     return False
 
+mensagemParaMaster = False
 
 while True:
     if (estadoRaspberry == 0):
@@ -155,13 +156,20 @@ while True:
         estadoRaspberry = 9
     
     elif (estadoRaspberry == 9):
-        uart.write("C06")
+        
+        if (mensagemParaMaster):
+            mensagemParaMaster = False
+            uart.write("C08:Mensagem do Slave")
+        else:
+            mensagemParaMaster = True
+            uart.write("C06")
+            
         data = recuperarMensagemSerial()
 
         if (data == "timeout"):
             estadoRaspberry = 0
         
         elif (data != "C06"):
-            print("Mensagem recebida do slave: " + str(data))
+            print("Mensagem recebida do master: " + str(data))
 
     time.sleep(tempoMensagemSerial)

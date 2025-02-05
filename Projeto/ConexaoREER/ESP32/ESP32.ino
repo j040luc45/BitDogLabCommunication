@@ -7,7 +7,6 @@
 
 //Variáveis da comunicação serial
 HardwareSerial UART_COM(1);
-char buffer[BUFFER_SIZE];
 long ultimaConexaoSerial = 0;
 int tempoMaximoNaoRetornoSerial = 2000;
 
@@ -25,14 +24,18 @@ WiFiServer * server;
 WiFiClient serverClient;
 long ultimaConexaoWifiSlave;
 char bufferMensagemParaSlave[BUFFER_SIZE];
+char bufferMensagemDoSlave[BUFFER_SIZE];
 bool novaMensagemParaSlave = false;
+bool novaMensagemDoSlave = false;
 
 //Variáveis da rede wifi slave
 int estadoWifiB = 0;
 WiFiClient * client;
 long ultimaConexaoWifiMaster;
 char bufferMensagemParaRaspSlave[BUFFER_SIZE];
+char bufferMensagemDoRaspSlave[BUFFER_SIZE];
 bool novaMensagemParaRaspSlave = false;
+bool novaMensagemDoRaspSlave = false;
 
 void(* resetFunc) (void) = 0;
 
@@ -41,12 +44,13 @@ void setup()
   Serial.begin(115200);
   UART_COM.begin(115200, SERIAL_8N1, UART1_RX, UART1_TX);
 
-  ClearBuffer();
+  ClearSerial();
 }
 
 void loop() 
 {
   if (UART_COM.available() > 0) {
+    char buffer[BUFFER_SIZE];
     int index = 0;
     
     while (UART_COM.available() > 0) {
@@ -164,12 +168,18 @@ void loop()
       }
     }
     else if (estadoEsp32 == 10) {
-      if (strcmp(buffer, "C06") == 0)
-        UART_COM.write("C06");
-      else if (buffer[0] == 'C' && buffer[1] == '0' && buffer[2] == '8') {
-        strcpy(bufferMensagemParaSlave, buffer);
-        novaMensagemParaSlave = true;
-        UART_COM.write("C06");
+      if (buffer[0] == 'C' && buffer[1] == '0' && (buffer[2] == '6' || buffer[2] == '8')) {
+        if (buffer[2] == '8') {
+          strcpy(bufferMensagemParaSlave, buffer);
+          novaMensagemParaSlave = true;
+        }
+
+        if (novaMensagemDoSlave) {
+          novaMensagemDoSlave = false;
+          UART_COM.write(bufferMensagemDoSlave);
+        }
+        else
+          UART_COM.write("C06");
       }
     }
     else if (estadoEsp32 == 106) {
@@ -185,7 +195,12 @@ void loop()
       }
     }
     else if (estadoEsp32 == 108) {
-      if (strcmp(buffer, "C06") == 0) {
+      if (buffer[0] == 'C' && buffer[1] == '0' && (buffer[2] == '6' || buffer[2] == '8')) {
+        if (buffer[2] == '8') {
+          strcpy(bufferMensagemDoRaspSlave, buffer);
+          novaMensagemDoRaspSlave = true;
+        }
+
         if (novaMensagemParaRaspSlave) {
           novaMensagemParaRaspSlave = false;
           UART_COM.write(bufferMensagemParaRaspSlave);
@@ -232,16 +247,23 @@ void loop()
   } 
   else if (estadoWifiA == 4) {
     if (serverClient.connected() && serverClient.available()) {
-      char bufferMensagemDoSlave[BUFFER_SIZE];
+      char buffer[BUFFER_SIZE];
       char caracter = serverClient.read();
 
       for (int i = 0; i < BUFFER_SIZE && caracter != '\n'; i++) {
-        bufferMensagemDoSlave[i] = caracter;
+        buffer[i] = caracter;
         caracter = serverClient.read();
       }
 
-      ultimaConexaoWifiSlave = millis();
-      estadoWifiA = 3;
+      if (buffer[0] == 'C' && buffer[1] == '0') {
+        if (buffer[2] == '8') {
+          strcpy(bufferMensagemDoSlave, buffer);
+          novaMensagemDoSlave = true;
+        }
+
+        ultimaConexaoWifiSlave = millis();
+        estadoWifiA = 3;
+      }
     }
   }
 
@@ -270,20 +292,25 @@ void loop()
   }
   else if (estadoWifiB == 4) {
     if (client->available()) {
-      char bufferMensagemDoMaster[BUFFER_SIZE];
+      char buffer[BUFFER_SIZE];
       char caracter = client->read();
 
       for (int i = 0; i < BUFFER_SIZE && caracter != '\n'; i++) {
-        bufferMensagemDoMaster[i] = caracter;
+        buffer[i] = caracter;
         caracter = client->read();
       }
 
-      if (bufferMensagemDoMaster[0] == 'C' && bufferMensagemDoMaster[1] == '0' && bufferMensagemDoMaster[2] == '8') {
+      if (buffer[0] == 'C' && buffer[1] == '0' && buffer[2] == '8') {
         novaMensagemParaRaspSlave = true;
-        strcpy(bufferMensagemParaRaspSlave, bufferMensagemDoMaster);
+        strcpy(bufferMensagemParaRaspSlave, buffer);
       }
 
-      client->write("C07", BUFFER_SIZE);
+      if (novaMensagemDoRaspSlave) {
+        novaMensagemDoRaspSlave = false;
+        client->write(bufferMensagemDoRaspSlave, BUFFER_SIZE);
+      }
+      else
+        client->write("C07", BUFFER_SIZE);
       ultimaConexaoWifiMaster = millis();
     }
   }
@@ -301,7 +328,7 @@ void loop()
   }
 }
 
-void ClearBuffer() {
+void ClearSerial() {
   while (UART_COM.available())
     UART_COM.read();
 }

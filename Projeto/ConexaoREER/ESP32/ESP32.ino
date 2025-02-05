@@ -39,6 +39,14 @@ bool novaMensagemDoRaspSlave = false;
 
 void(* resetFunc) (void) = 0;
 
+void reiniciar() {
+  ClearSerial();
+  UART_COM.end();
+  delay(2000);
+
+  resetFunc();
+}
+
 void setup() 
 {
   Serial.begin(115200);
@@ -65,7 +73,7 @@ void loop()
     
     if (strcmp(buffer, "C00") == 0) {
       if (estadoEsp32 != 0)
-        resetFunc();
+        reiniciar();
 
       UART_COM.write("C01");
       estadoEsp32 = 1;
@@ -316,15 +324,15 @@ void loop()
   }
 
   if (estadoEsp32 != 0 && millis() - ultimaConexaoSerial > tempoMaximoNaoRetornoSerial) {
-    resetFunc();
+    reiniciar();
   }
 
   if (estadoWifiA >= 4 && millis() - ultimaConexaoWifiSlave > tempoMaximoNaoRetornoSerial) {
-    resetFunc();
+    reiniciar();
   }
 
   if (estadoWifiB >= 4 && millis() - ultimaConexaoWifiMaster > tempoMaximoNaoRetornoSerial) {
-    resetFunc();
+    reiniciar();
   }
 }
 

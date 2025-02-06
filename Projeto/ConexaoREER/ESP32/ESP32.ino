@@ -49,7 +49,7 @@ void reiniciar() {
 
 void setup() 
 {
-  Serial.begin(115200);
+  //Serial.begin(115200);
   UART_COM.begin(115200, SERIAL_8N1, UART1_RX, UART1_TX);
 
   ClearSerial();
@@ -77,16 +77,11 @@ void loop()
 
       UART_COM.write("C01");
       estadoEsp32 = 1;
-
-      Serial.println("Raspberry Conectada");
     }
     else if (estadoEsp32 == 0) {
       return;
     }
     else if (estadoEsp32 == 1) {
-      Serial.print("Mensagem Recebida: ");
-      Serial.println(buffer);
-
       if (strcmp(buffer, "C02") == 0)
         UART_COM.write("C02");
       else if (strcmp(buffer, "C03") == 0) {
@@ -95,9 +90,6 @@ void loop()
       }
     }
     else if (estadoEsp32 >= 2 && estadoEsp32 <= 4) {
-      Serial.print("Mensagem Recebida: ");
-      Serial.println(buffer);
-
       if (buffer[0] != 'C' || buffer[1] != '0' || buffer[2] != '3')
         return;
 
@@ -126,12 +118,14 @@ void loop()
       estadoEsp32++;
 
       if (estadoEsp32 == 5) {
+        /*
         Serial.print("\nDados da rede: \nTipo: ");
         Serial.print(tipoRede);
         Serial.print("; Nome da Rede: ");
         Serial.print(nomeRede);
         Serial.print("; Senha da Rede: ");
         Serial.println(senhaRede);
+        */
 
         tempoMaximoNaoRetornoSerial = 10000;
 
@@ -148,16 +142,10 @@ void loop()
       UART_COM.write("C03:OK");
     }
     else if (estadoEsp32 == 6) {
-      Serial.print("Mensagem Recebida: ");
-      Serial.println(buffer);
-
       if (strcmp(buffer, "C04") == 0)
         UART_COM.write("C04");
     }
     else if (estadoEsp32 == 7) {
-      Serial.print("Mensagem Recebida: ");
-      Serial.println(buffer);
-
       if (strcmp(buffer, "C04") == 0){
         UART_COM.write("C04:OK");
 
@@ -225,8 +213,8 @@ void loop()
     WiFi.softAP(nomeRede, senhaRede);
     IPAddress IP = WiFi.softAPIP();
 
-    Serial.print("AP IP address: ");
-    Serial.println(IP);
+    //Serial.print("AP IP address: ");
+    //Serial.println(IP);
     
     server->begin();
     estadoWifiA = 2;
@@ -285,13 +273,12 @@ void loop()
     if (WiFi.status() == WL_CONNECTED) {
       estadoWifiB = 3;
 
-      Serial.print("Wifi conectado com IP: ");
-      Serial.println(WiFi.localIP());
+      //Serial.print("Wifi conectado com IP: ");
+      //Serial.println(WiFi.localIP());
     }
   }
   else if (estadoWifiB == 3) {
     if (client->connect(WiFi.gatewayIP(), 80)) {
-      Serial.println("Conectado com o servidor");
       ultimaConexaoWifiMaster = millis();
 
       estadoEsp32 = 107;

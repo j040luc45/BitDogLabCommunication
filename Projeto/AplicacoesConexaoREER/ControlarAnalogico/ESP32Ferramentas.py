@@ -24,10 +24,11 @@ class ESP32Ferramentas:
         self.uart.init(bits=8, parity=None, stop=1)
 
         self.estado = 0
-        self.tempoMensagemSerial = .3
+        self.tempoMensagemSerial = .01
         self.tempoMaximoNaoRetorno = 2.0
         self.ultimaConexao = time.time()
         self.mensagemParEnviar = []
+        self.menasgemRecebida = []
 
     # Limpar OLED
     def limparOLED(self):
@@ -97,8 +98,14 @@ class ESP32Ferramentas:
     def enviarDados(self, texto):
         self.mensagemParEnviar.append(texto)
 
-    def limparDados(self):
+    def limparDadosParaEnviar(self):
         self.mensagemParEnviar.clear()
+
+    def RecuperadaDadoRecebido(self):
+        if (len(self.menasgemRecebida) > 0):
+            return self.menasgemRecebida.pop(0)
+        else:
+            return "NaN"
 
     def executarEtapa(self):
         if (self.dadosDaRede[1] == ":wifi-master"):
@@ -184,7 +191,10 @@ class ESP32Ferramentas:
                 if (data == "timeout"):
                     self.estado = 0
                 elif (data != "C06"):
-                    print("Nova mensagem do Slave: " + str(data))
+                    if (data[0:3] == "C08"):
+                        if (len(self.menasgemRecebida) > 30):
+                            self.menasgemRecebida.pop(0)
+                        self.menasgemRecebida.append(data[4:])
             
                 return True
         
@@ -248,9 +258,12 @@ class ESP32Ferramentas:
 
                 if (data == "timeout"):
                     self.estado = 0
-                
+
                 elif (data != "C06"):
-                    print("Mensagem recebida do master: " + str(data))
+                    if (data[0:3] == "C08"):
+                        if (len(self.menasgemRecebida) > 30):
+                            self.menasgemRecebida.pop(0)
+                        self.menasgemRecebida.append(data[4:])
 
                 return True
 

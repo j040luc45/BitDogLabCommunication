@@ -1,7 +1,7 @@
-from machine import Pin, UART, SoftI2C
+from machine import Pin, ADC
 from ssd1306 import SSD1306_I2C # type: ignore
-import ESP32Ferramentas
 import time
+import ESP32Ferramentas
 
 esp32 = ESP32Ferramentas.ESP32Ferramentas([0, 1], [":wifi-master", ":ESP32-Master", ":123456789"], True)
 

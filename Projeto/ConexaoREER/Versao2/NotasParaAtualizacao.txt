@@ -1,0 +1,5 @@
+ESP32:
+- Talvez criar uma lista para controlar os dados que serão enviados (talvez usar a variável booleana para verificar se já foi usada)
+- Usar apenas um vetor para ambos o tipo de comunicação
+
+ESP32-Ferramentas:

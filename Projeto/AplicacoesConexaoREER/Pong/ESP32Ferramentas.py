@@ -24,9 +24,10 @@ class ESP32Ferramentas:
         self.uart.init(bits=8, parity=None, stop=1)
 
         self.estado = 0
-        self.tempoMensagemSerial = .01
-        self.tempoMaximoNaoRetorno = 2.0
-        self.ultimaConexao = time.time()
+        self.tempoMensagemSerial = 20
+        self.tempoMaximoNaoRetorno = 2000
+        self.ultimaConexao = time.ticks_ms()
+        self.mensagemRetornadaSerial = True
         self.mensagemParEnviar = []
         self.menasgemRecebida = []
 
@@ -52,22 +53,32 @@ class ESP32Ferramentas:
     # Se atingir um timeout, é retornado "timeout"
     def recuperarMensagemSerial(self):
 
-        while (not self.uart.any() and time.time() - self.ultimaConexao < self.tempoMaximoNaoRetorno):
-            time.sleep(.2)
+        while (not self.uart.any() and time.ticks_ms() - self.ultimaConexao < self.tempoMaximoNaoRetorno):
+            time.sleep(.02)
 
         if (not self.uart.any()):
             print("Sem conexao com o ESP32, tentando novamente...")
-            self.ultimaConexao = time.time()
+            self.ultimaConexao = time.ticks_ms()
             self.uart.flush()
 
             return "timeout"
 
         if self.uart.any(): 
-            self.ultimaConexao = time.time()
+            self.ultimaConexao = time.ticks_ms()
             buffer = self.uart.read()
-            data = buffer.decode("ascii") 
+            try:
+                data = buffer.decode("ascii") 
+                return data
+            except:
+                return "error"
+        
+        return "error"
 
-            return data
+    def verificarNovarMensagemSerial(self):
+        return self.uart.any()
+    
+    def verificarTimeOutSerial(self):
+        return (time.ticks_ms() - self.ultimaConexao > self.tempoMaximoNaoRetorno)
         
     def conectarSerial(self):
         self.uart.write("C00")
@@ -96,18 +107,24 @@ class ESP32Ferramentas:
         return False
     
     def enviarDados(self, texto):
+        if (len(self.mensagemParEnviar) > 30):
+            self.mensagemParEnviar.pop(0)
+
         self.mensagemParEnviar.append(texto)
 
     def limparDadosParaEnviar(self):
         self.mensagemParEnviar.clear()
 
-    def RecuperadaDadoRecebido(self):
+    def recuperadaDadosRecebido(self):
         if (len(self.menasgemRecebida) > 0):
             return self.menasgemRecebida.pop(0)
         else:
-            return "NaN"
+            return None
 
     def executarEtapa(self):
+        if (time.ticks_ms() - self.ultimaConexao < self.tempoMensagemSerial):
+            return None
+
         if (self.dadosDaRede[1] == ":wifi-master"):
             if (self.estado == 0):
                 self.limparOLED()
@@ -139,7 +156,7 @@ class ESP32Ferramentas:
             elif (self.estado == 5):
                 if (self.enviarDadosDaRede()):
                     self.estado = 6
-                    self.tempoMaximoNaoRetorno = 10.0
+                    self.tempoMaximoNaoRetorno = 10000
             
             elif (self.estado == 6):
                 self.adicionarLinhaOLED("Criando Rede..")
@@ -153,7 +170,7 @@ class ESP32Ferramentas:
                     self.estado = 0
 
                 if (data == "C04:OK"):
-                    self.tempoMaximoNaoRetorno = 2.0
+                    self.tempoMaximoNaoRetorno = 2000
                     self.estado = 8
 
             elif (self.estado == 8):
@@ -177,16 +194,27 @@ class ESP32Ferramentas:
             
             elif (self.estado == 10):
                 self.adicionarLinhaOLED("Clt Conectado")
+                self.mensagemRetornadaSerial = True
                 self.estado = 11
 
             elif (self.estado == 11):
                 
-                if (len(self.mensagemParEnviar) == 0):
-                    self.uart.write("C06")
-                else:
-                    self.uart.write("C08:" + self.mensagemParEnviar.pop(0))
+                if (self.mensagemRetornadaSerial):
+                    self.mensagemRetornadaSerial = False
+                    if (len(self.mensagemParEnviar) == 0):
+                        self.uart.write("C06")
+                    else:
+                        mensagemParaEnviar = "C08:{0}".format(self.mensagemParEnviar.pop(0))
+                        self.uart.write(mensagemParaEnviar)
 
-                data = self.recuperarMensagemSerial()
+                if (self.verificarNovarMensagemSerial()):
+                    self.mensagemRetornadaSerial = True
+                    data = self.recuperarMensagemSerial()
+                elif (self.verificarTimeOutSerial()):
+                    self.ultimaConexao = time.ticks_ms()
+                    data = "timeout"
+                else:
+                    data = "C06"
 
                 if (data == "timeout"):
                     self.estado = 0
@@ -245,20 +273,28 @@ class ESP32Ferramentas:
             
             elif (self.estado == 8):
                 self.adicionarLinhaOLED("Rede conectada")
+                self.mensagemRetornadaSerial = True
                 self.estado = 9
             
             elif (self.estado == 9):
                 
-                if (len(self.mensagemParEnviar) == 0):
-                    self.uart.write("C06")
-                else:
-                    self.uart.write("C08:" + self.mensagemParEnviar.pop(0))
+                if (self.mensagemRetornadaSerial):
+                    self.mensagemRetornadaSerial = False
+                    if (len(self.mensagemParEnviar) == 0):
+                        self.uart.write("C06")
+                    else:
+                        self.uart.write("C08:" + self.mensagemParEnviar.pop(0))
 
-                data = self.recuperarMensagemSerial()
+                if (self.verificarNovarMensagemSerial()):
+                    self.mensagemRetornadaSerial = True
+                    data = self.recuperarMensagemSerial()
+                elif (self.verificarTimeOutSerial()):
+                    data = "timeout"
+                else:
+                    data = "C06"
 
                 if (data == "timeout"):
                     self.estado = 0
-
                 elif (data != "C06"):
                     if (data[0:3] == "C08"):
                         if (len(self.menasgemRecebida) > 30):
@@ -268,6 +304,3 @@ class ESP32Ferramentas:
                 return True
 
         return False
-    
-    def executarIntervalo(self):
-        time.sleep(self.tempoMensagemSerial)

@@ -26,6 +26,7 @@ tempoUltimaAtualziacao = time.ticks_ms()
 
 # Inicializar Comunicação ESP32
 esp32 = ESP32Ferramentas.ESP32Ferramentas([0, 1], [":wifi-master", ":ESP32-Master", ":123456789"], True)
+#esp32 = ESP32Ferramentas.ESP32Ferramentas([16, 17], [":wifi-master", ":ESP32-Master", ":123456789"], True)
 novaMessagemEsp = ""
 
 # Configurações Iniciais
@@ -99,6 +100,7 @@ while (True):
 
             if (time.ticks_ms() - tempoMensagemOled > 2 * 1000):
                 posicaoBola = {"x": 64, "y": random.randint(5, DIMENSAOYOLED - 5)}
+                placarJogo = [0, 0]
                 maquinaDeEstados = 10
 
         elif (maquinaDeEstados == 3):

@@ -2,8 +2,14 @@
 #include <WiFi.h>
 
 #define BUFFER_SIZE 100 
-#define UART1_RX 18
-#define UART1_TX 17
+
+//ESP32-C3
+#define UART1_RX 20
+#define UART1_TX 21
+
+//ESP32-S3
+//#define UART1_RX 18
+//#define UART1_TX 17
 
 //Variáveis da comunicação serial
 HardwareSerial UART_COM(1);
@@ -51,6 +57,8 @@ void setup()
 {
   //Serial.begin(115200);
   UART_COM.begin(115200, SERIAL_8N1, UART1_RX, UART1_TX);
+  Serial.begin(115200);
+  Serial.println("Inicializando");
 
   ClearSerial();
 }
@@ -65,6 +73,9 @@ void loop()
       buffer[index++] = UART_COM.read();
     }
     buffer[index] = '\0';
+
+    Serial.print("Mensagem Recebida: ");
+    Serial.println(buffer);
 
     if (index < 3 || buffer[0] != 'C')
       return;

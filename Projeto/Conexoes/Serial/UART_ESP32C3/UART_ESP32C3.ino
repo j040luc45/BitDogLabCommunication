@@ -12,6 +12,7 @@ void ClearBuffer();
 void setup() 
 {
   Serial.begin(115200);
+  Serial.println("Inicializando...");
   UART_COM.begin(115200, SERIAL_8N1, UART1_RX, UART1_TX);
 
   ClearBuffer();
@@ -19,6 +20,7 @@ void setup()
 
 void loop() 
 {
+  Serial.println("Oxi...");
   if (UART_COM.available() > 0) {
     int index = 0;
 

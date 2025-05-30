@@ -1,17 +1,14 @@
-from machine import Pin,UART
+from machine import Pin, UART
 import time
 
-uart = UART(0, baudrate=115200, tx=Pin(16), rx=Pin(17))
+uart = UART(0, baudrate=115200, tx=Pin(0), rx=Pin(1))
 
 uart.init(bits=8, parity=None, stop=1)
 
 while True:
-    uart.write('Mensagem do Raspberry')
-    
-    while not uart.any():
-        time.sleep(.01)
 
     if uart.any(): 
+        print("Entrou nos dados")
         buffer = uart.read()
         print(buffer)
         data = buffer.decode('ascii')  # Decodifica os bytes em string ASCII

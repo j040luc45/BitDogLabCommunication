@@ -3,7 +3,7 @@ from ssd1306 import SSD1306_I2C # type: ignore
 import time
 import ESP32Ferramentas
 
-esp32 = ESP32Ferramentas.ESP32Ferramentas([0, 1], [":lorawan-uplink", ":120", ":10000"], True)
+esp32 = ESP32Ferramentas.ESP32Ferramentas([0, 1], [":lorawan-uplink", ":10", ":60000"], True)
 
 while True:
     if(esp32.executarEtapa()):

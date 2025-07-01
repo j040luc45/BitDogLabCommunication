@@ -1,0 +1,59 @@
+"decoded_payload": {
+    "cbat": -154.1,
+    "latitude": 0,
+    "longitude": 0,
+    "temperatura": 23.93,
+    "timestamp": 0,
+    "umidade": 0,
+    "vbat": 4.005
+}
+
+"decoded_payload": {
+    "cbat": -170.25,
+    "latitude": 0,
+    "longitude": 0,
+    "temperatura": 23.59,
+    "timestamp": 0,
+    "umidade": 0,
+    "vbat": 4.00625
+}
+
+"decoded_payload": {
+    "cbat": 534.4,
+    "latitude": -22.82195,
+    "longitude": -47.06589,
+    "temperatura": 28.73,
+    "timestamp": 1751392653,
+    "umidade": 0,
+    "vbat": 4.13875
+}
+
+"decoded_payload": {
+    "cbat": 544.8,
+    "latitude": -22.82195,
+    "longitude": -47.06589,
+    "temperatura": 29.51,
+    "timestamp": 1751392714,
+    "umidade": 0,
+    "vbat": 4.14
+}
+
+"decoded_payload": {
+    "cbat": 522.05,
+    "latitude": -22.82195,
+    "longitude": -47.06587,
+    "temperatura": 29.4,
+    "timestamp": 1751392802,
+    "umidade": 0,
+    "vbat": 4.1375
+}
+
+"decoded_payload": {
+    "cbat": 537.75,
+    "latitude": -22.82196,
+    "longitude": -47.06588,
+    "temperatura": 29.06,
+    "timestamp": 1751392878,
+    "umidade": 0,
+    "vbat": 4.13875
+}

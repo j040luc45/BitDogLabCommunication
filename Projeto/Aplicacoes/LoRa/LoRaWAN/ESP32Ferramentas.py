@@ -8,7 +8,7 @@ class ESP32Ferramentas:
 
         # Configuração do OLED
         if (oledEnable):
-            i2c = SoftI2C(scl=Pin(15), sda=Pin(14))
+            i2c = SoftI2C(scl=Pin(3), sda=Pin(2))
             self.oled = SSD1306_I2C(128, 64, i2c)
             self.ultimaLinha = 0
             self.oledEnable = True
@@ -16,12 +16,8 @@ class ESP32Ferramentas:
             self.oledEnable = False
 
         self.dadosDaRede = dadosDaRede
-        while (len(self.dadosDaRede) < 6):
-            self.dadosDaRede.append(":-")
-
         self.dadosDaRede.insert(0, "")
-
-        self.etiquetaDadosRede = ["T", "N", "S", "A", "D", "K"]
+        self.etiquetaDadosRede = ["T", "N", "S"]
         self.indexDadosDaRede = 0
 
         self.uart = UART(0, baudrate=115200, tx=Pin(portas[0]), rx=Pin(portas[1]))

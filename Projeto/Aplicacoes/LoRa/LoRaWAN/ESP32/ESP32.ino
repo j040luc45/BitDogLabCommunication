@@ -5,7 +5,7 @@
 
 #include "LoRaWANTool.h"
 
-#define BUFFER_SIZE 100 
+#define BUFFER_SIZE 200
 
 //ESP32-C3 //Usando Pinos SDA e SCL
 //#define UART1_RX 6
@@ -61,9 +61,6 @@ int tempoMaximoNaoRetornoLoRa = 10000;
 
 //3 - LoRaWAN
 int estadoLoRaWAN = 0;
-char * appeui;
-char * deveui;
-char * appkey;
 
 void(* resetFunc) (void) = 0;
 
@@ -120,7 +117,7 @@ void loop() {
         estadoEsp32 = 2;
       }
     }
-    else if (estadoEsp32 >= 2 && estadoEsp32 <= 7) {
+    else if (estadoEsp32 >= 2 && estadoEsp32 <= 4) {
       if (buffer[0] != 'C' || buffer[1] != '0' || buffer[2] != '3')
         return;
 
@@ -149,25 +146,24 @@ void loop() {
           break;
         case 4:
           senhaRede = strdup(dadosRede);
-          break;
-        case 5:
-          appeui = strdup(dadosRede);
-          break;
-        case 6:
-          deveui = strdup(dadosRede);
-          break;
-        case 7:
-          appkey = strdup(dadosRede);
-          break;
       }
 
       estadoEsp32++;
 
-      if (estadoEsp32 == 8) {
+      if (estadoEsp32 == 5) {
+        /*
+        Serial.print("\nDados da rede: \nTipo: ");
+        Serial.print(tipoRede);
+        Serial.print("; Nome da Rede: ");
+        Serial.print(nomeRede);
+        Serial.print("; Senha da Rede: ");
+        Serial.println(senhaRede);
+        */
+
         tempoMaximoNaoRetornoSerial = 10000;
 
         if (tipoRede == 1) {
-          estadoEsp32 = 9;
+          estadoEsp32 = 6;
           estadoWifiA = 1;
         }
         else if (tipoRede == 2) {
@@ -187,177 +183,164 @@ void loop() {
           tempoMaximoNaoRetornoSerial = atoi(senhaRede);
           estadoEsp32 = 406;
           estadoLoRaWAN = 1;
-
-          setAppEui(appeui);
-          setDevEui(deveui);
-          setAppKey(appkey);
         }
       }
 
       UART_COM.write("C03:OK");
     }
+    else if (estadoEsp32 == 6) {
+      if (strcmp(buffer, "C04") == 0)
+        UART_COM.write("C04");
+    }
+    else if (estadoEsp32 == 7) {
+      if (strcmp(buffer, "C04") == 0){
+        UART_COM.write("C04:OK");
 
-    else if (estadoEsp32 < 100) {
-      if (estadoEsp32 == 9) {
-        if (strcmp(buffer, "C04") == 0)
-          UART_COM.write("C04");
-      }
-      else if (estadoEsp32 == 10) {
-        if (strcmp(buffer, "C04") == 0){
-          UART_COM.write("C04:OK");
-
-          estadoEsp32 = 8;
-          tempoMaximoNaoRetornoSerial = 2000;
-        }
-      }
-      else if (estadoEsp32 == 11) {
-        if (strcmp(buffer, "C05") == 0)
-          UART_COM.write("C05");
-      }
-      else if (estadoEsp32 == 12) {
-        if (strcmp(buffer, "C05") == 0) {
-          UART_COM.write("C05:OK");
-          estadoEsp32 = 10;
-        }
-      }
-      else if (estadoEsp32 == 13) {
-        if (buffer[0] == 'C' && buffer[1] == '0' && (buffer[2] == '6' || buffer[2] == '8')) {
-          if (buffer[2] == '8') {
-            strcpy(bufferMensagemParaESP32, buffer);
-            novaMensagemParaESP32 = true;
-          }
-
-          if (novaMensagemParaRaspberry) {
-            novaMensagemParaRaspberry = false;
-            UART_COM.write(bufferMensagemParaRaspberry);
-          }
-          else
-            UART_COM.write("C06");
-        }
+        estadoEsp32 = 8;
+        tempoMaximoNaoRetornoSerial = 2000;
       }
     }
-    else if (estadoEsp32 < 200) {
-      if (estadoEsp32 == 106) {
-        if (strcmp(buffer, "C05") == 0)
-          UART_COM.write("C05");
-      }
-      else if (estadoEsp32 == 107) {
-        if (strcmp(buffer, "C05") == 0) {
-          UART_COM.write("C05:OK");
-          
-          estadoEsp32 = 108;
-          tempoMaximoNaoRetornoSerial = 2000;
-        }
-      }
-      else if (estadoEsp32 == 108) {
-        if (buffer[0] == 'C' && buffer[1] == '0' && (buffer[2] == '6' || buffer[2] == '8')) {
-          if (buffer[2] == '8') {
-            strcpy(bufferMensagemParaESP32, buffer);
-            novaMensagemParaESP32 = true;
-          }
-
-          if (novaMensagemParaRaspberry) {
-            novaMensagemParaRaspberry = false;
-            UART_COM.write(bufferMensagemParaRaspberry);
-          }
-          else
-            UART_COM.write("C06");
-        }
-      }
-      else if (estadoEsp32 == 206) {
-        if (strcmp(buffer, "C04") == 0)
-          UART_COM.write("C04");
-      }
-      else if (estadoEsp32 == 207) {
-        if (strcmp(buffer, "C04") == 0){
-          UART_COM.write("C04:OK");
-
-          estadoEsp32 = 208;
-          tempoMaximoNaoRetornoSerial = 2000;
-        }
+    else if (estadoEsp32 == 8) {
+      if (strcmp(buffer, "C05") == 0)
+        UART_COM.write("C05");
+    }
+    else if (estadoEsp32 == 9) {
+      if (strcmp(buffer, "C05") == 0) {
+        UART_COM.write("C05:OK");
+        estadoEsp32 = 10;
       }
     }
-    else if (estadoEsp32 < 300) {
-      if (estadoEsp32 == 208) {
-        if (strcmp(buffer, "C05") == 0)
-          UART_COM.write("C05");
-      }
-      else if (estadoEsp32 == 209) {
-        if (strcmp(buffer, "C05") == 0) {
-          UART_COM.write("C05:OK");
-          estadoEsp32 = 210;
-
-          tempoMaximoNaoRetornoSerial = atoi(senhaRede);
+    else if (estadoEsp32 == 10) {
+      if (buffer[0] == 'C' && buffer[1] == '0' && (buffer[2] == '6' || buffer[2] == '8')) {
+        if (buffer[2] == '8') {
+          strcpy(bufferMensagemParaESP32, buffer);
+          novaMensagemParaESP32 = true;
         }
-      }
-      else if (estadoEsp32 == 210) {
-        if (buffer[0] == 'C' && buffer[1] == '0' && (buffer[2] == '6' || buffer[2] == '8')) {
-          if (buffer[2] == '8') {
-            strcpy(bufferMensagemParaESP32, buffer);
-            novaMensagemParaESP32 = true;
-          }
 
-          if (novaMensagemParaRaspberry) {
-            novaMensagemParaRaspberry = false;
-            UART_COM.write(bufferMensagemParaRaspberry);
-          }
-          else
-            UART_COM.write("C06");
+        if (novaMensagemParaRaspberry) {
+          novaMensagemParaRaspberry = false;
+          UART_COM.write(bufferMensagemParaRaspberry);
         }
-      }
-    }
-    else if (estadoEsp32 < 400) {
-      if (estadoEsp32 == 306) {
-        if (strcmp(buffer, "C05") == 0)
-          UART_COM.write("C05");
-      }
-      else if (estadoEsp32 == 307) {
-        if (strcmp(buffer, "C05") == 0) {
-          UART_COM.write("C05:OK");
-          
-          estadoEsp32 = 308;
-          tempoMaximoNaoRetornoSerial = atoi(senhaRede);
-        }
-      }
-      else if (estadoEsp32 == 308) {
-        if (buffer[0] == 'C' && buffer[1] == '0' && (buffer[2] == '6' || buffer[2] == '8')) {
-          if (buffer[2] == '8') {
-            strcpy(bufferMensagemParaESP32, buffer);
-            novaMensagemParaESP32 = true;
-          }
-
-          if (novaMensagemParaRaspberry) {
-            novaMensagemParaRaspberry = false;
-            UART_COM.write(bufferMensagemParaRaspberry);
-          }
-          else
-            UART_COM.write("C06");
-        }
-      }
-    }
-    else if (estadoEsp32 < 500) {
-      if (estadoEsp32 == 406) {
-        if (strcmp(buffer, "C05") == 0)
-          UART_COM.write("C05");
-      }
-      else if (estadoEsp32 == 407) {
-        if (strcmp(buffer, "C05") == 0)
-          UART_COM.write("C05:OK");
-
-        estadoEsp32 = 408;
-      }
-      else if (estadoEsp32 == 408) {
-        if (buffer[0] == 'C' && buffer[1] == '0' && (buffer[2] == '6' || buffer[2] == '8')) {
-          if (buffer[2] == '8') {
-            setMensagem(buffer);
-          }
-          
+        else
           UART_COM.write("C06");
+      }
+    }
+    else if (estadoEsp32 == 106) {
+      if (strcmp(buffer, "C05") == 0)
+        UART_COM.write("C05");
+    }
+    else if (estadoEsp32 == 107) {
+      if (strcmp(buffer, "C05") == 0) {
+        UART_COM.write("C05:OK");
+        
+        estadoEsp32 = 108;
+        tempoMaximoNaoRetornoSerial = 2000;
+      }
+    }
+    else if (estadoEsp32 == 108) {
+      if (buffer[0] == 'C' && buffer[1] == '0' && (buffer[2] == '6' || buffer[2] == '8')) {
+        if (buffer[2] == '8') {
+          strcpy(bufferMensagemParaESP32, buffer);
+          novaMensagemParaESP32 = true;
         }
+
+        if (novaMensagemParaRaspberry) {
+          novaMensagemParaRaspberry = false;
+          UART_COM.write(bufferMensagemParaRaspberry);
+        }
+        else
+          UART_COM.write("C06");
       }
-      else if (estadoEsp32 == 409) {
-        reiniciar();
+    }
+    else if (estadoEsp32 == 206) {
+      if (strcmp(buffer, "C04") == 0)
+        UART_COM.write("C04");
+    }
+    else if (estadoEsp32 == 207) {
+      if (strcmp(buffer, "C04") == 0){
+        UART_COM.write("C04:OK");
+
+        estadoEsp32 = 208;
+        tempoMaximoNaoRetornoSerial = 2000;
       }
+    }
+    else if (estadoEsp32 == 208) {
+      if (strcmp(buffer, "C05") == 0)
+        UART_COM.write("C05");
+    }
+    else if (estadoEsp32 == 209) {
+      if (strcmp(buffer, "C05") == 0) {
+        UART_COM.write("C05:OK");
+        estadoEsp32 = 210;
+
+        tempoMaximoNaoRetornoSerial = atoi(senhaRede);
+      }
+    }
+    else if (estadoEsp32 == 210) {
+      if (buffer[0] == 'C' && buffer[1] == '0' && (buffer[2] == '6' || buffer[2] == '8')) {
+        if (buffer[2] == '8') {
+          strcpy(bufferMensagemParaESP32, buffer);
+          novaMensagemParaESP32 = true;
+        }
+
+        if (novaMensagemParaRaspberry) {
+          novaMensagemParaRaspberry = false;
+          UART_COM.write(bufferMensagemParaRaspberry);
+        }
+        else
+          UART_COM.write("C06");
+      }
+    }
+    else if (estadoEsp32 == 306) {
+      if (strcmp(buffer, "C05") == 0)
+        UART_COM.write("C05");
+    }
+    else if (estadoEsp32 == 307) {
+      if (strcmp(buffer, "C05") == 0) {
+        UART_COM.write("C05:OK");
+        
+        estadoEsp32 = 308;
+        tempoMaximoNaoRetornoSerial = atoi(senhaRede);
+      }
+    }
+    else if (estadoEsp32 == 308) {
+      if (buffer[0] == 'C' && buffer[1] == '0' && (buffer[2] == '6' || buffer[2] == '8')) {
+        if (buffer[2] == '8') {
+          strcpy(bufferMensagemParaESP32, buffer);
+          novaMensagemParaESP32 = true;
+        }
+
+        if (novaMensagemParaRaspberry) {
+          novaMensagemParaRaspberry = false;
+          UART_COM.write(bufferMensagemParaRaspberry);
+        }
+        else
+          UART_COM.write("C06");
+      }
+    }
+
+    else if (estadoEsp32 == 406) {
+      if (strcmp(buffer, "C05") == 0)
+        UART_COM.write("C05");
+    }
+    else if (estadoEsp32 == 407) {
+      if (strcmp(buffer, "C05") == 0)
+        UART_COM.write("C05:OK");
+
+      setMensagem("{'nodata': 1}");
+      estadoEsp32 = 408;
+    }
+    else if (estadoEsp32 == 408) {
+      if (buffer[0] == 'C' && buffer[1] == '0' && (buffer[2] == '6' || buffer[2] == '8')) {
+        if (buffer[2] == '8') {
+          setMensagem(buffer);
+        }
+        
+        UART_COM.write("C06");
+      }
+    }
+    else if (estadoEsp32 == 409) {
+      reiniciar();
     }
   }
 

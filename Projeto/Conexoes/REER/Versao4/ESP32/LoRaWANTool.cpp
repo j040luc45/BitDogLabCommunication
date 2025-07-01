@@ -3,15 +3,15 @@
 #include <lmic.h>
 #include <hal/hal.h>
 
-#define BUFFER_SIZE_LORA 100 
+#define BUFFER_SIZE_LORA 200
 
-static u1_t APPEUI[8]={ 0x01, 0x00, 0x00, 0x00, 0x7E, 0xD5, 0xB3, 0x70 };
+static const u1_t PROGMEM APPEUI[8]={ 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 void os_getArtEui (u1_t* buf) { memcpy_P(buf, APPEUI, 8);}
 
-static u1_t DEVEUI[8]={ 0x4B, 0x14, 0x07, 0xD0, 0x7E, 0xD5, 0xB3, 0x70 };
+static const u1_t PROGMEM DEVEUI[8]={ 0x1E, 0x1A, 0x07, 0xD0, 0x7E, 0xD5, 0xB3, 0x70 };
 void os_getDevEui (u1_t* buf) { memcpy_P(buf, DEVEUI, 8);}
 
-static u1_t APPKEY[16] = { 0x43, 0x01, 0x91, 0x80, 0x1F, 0xDF, 0x2F, 0x74, 0xDB, 0x79, 0x83, 0xC1, 0xCF, 0x90, 0x88, 0x91 };
+static const u1_t PROGMEM APPKEY[16] = { 0x40, 0x42, 0xB2, 0xF5, 0x4F, 0xEF, 0x9A, 0xA6, 0x83, 0xC5, 0x57, 0xB1, 0x02, 0x15, 0xD6, 0x7E };
 void os_getDevKey (u1_t* buf) {  memcpy_P(buf, APPKEY, 16);}
 
 static osjob_t sendjob;
@@ -141,6 +141,10 @@ void onEvent (ev_t ev) {
               Serial.println(F(" bytes of payload"));
             }
             // Schedule next transmission
+            Serial.print("SNR: ");
+            Serial.println(LMIC.snr);
+            Serial.print("RSSI: ");
+            Serial.println(LMIC.rssi);
             os_setTimedCallback(&sendjob, os_getTime()+sec2osticks(intervalorComunicacaoLoRaWAN), do_send);
             break;
         case EV_LOST_TSYNC:
@@ -222,41 +226,4 @@ int executarEtapaLoRaWAN(int estadoAtualEsp32) {
 
   return estadoAtualEsp32;
 }
-
-int parse_hex_string(const char* input, u1_t* output, size_t max_len) {
-    int count = 0;
-    const char* ptr = input;
-
-    while (*ptr && count < max_len) {
-        unsigned int byte;
-        if (sscanf(ptr, " 0x%2x", &byte) == 1) {
-            output[count++] = (u1_t)byte;
-
-            // Avança para o próximo número (até a próxima vírgula ou final da string)
-            const char* comma = strchr(ptr, ',');
-            if (comma) {
-                ptr = comma + 1;
-            } else {
-                break;
-            }
-        } else {
-            break;  // erro de parsing
-        }
-    }
-
-    return count;  // número de bytes preenchidos
-}
-
-void setAppEui(char * appEui) {
-    parse_hex_string(appEui, APPEUI, BUFFER_SIZE_LORA);
-}
-
-void setDevEui(char * devEui) {
-    parse_hex_string(devEui, DEVEUI, BUFFER_SIZE_LORA);
-}
-
-void setAppKey(char * appKey) {
-    parse_hex_string(appKey, APPKEY, BUFFER_SIZE_LORA);
-}
-
 
